@@ -1,0 +1,106 @@
+{
+  "student_housing": [
+      {
+          "name": "Andalus & Zahraa Dorms",
+          "location": "Inside University of Jordan campus",
+          "room_types": [
+              {"type": "Single Room", "price_JOD": 300},
+              {"type": "Double Room (Sisters)", "price_JOD": 200},
+              {"type": "Double Room (Roommates)", "price_JOD": 250},
+              {"type": "Triple Room", "price_JOD": 150}
+          ],
+          "services": ["Security", "Internet", "Cafeteria"],
+          "images": [
+              "https://example.com/andalus1.jpg",
+              "https://example.com/andalus2.jpg",
+              "https://example.com/andalus3.jpg",
+              "https://example.com/andalus4.jpg"
+          ],
+          "video": "https://example.com/andalus_video.mp4",
+          "availability": "Available",
+          "booking_duration": "Semester",
+          "daily_booking": false,
+          "source": "https://ju.edu.jo"
+      },
+      {
+          "name": "Fiha Dorms",
+          "location": "Outside University of Jordan, near main gate",
+          "room_types": [
+              {"type": "Private Room", "price_JOD": 160},
+              {"type": "Shared Room", "price_JOD": 130}
+          ],
+          "services": ["Water", "Electricity", "Internet", "Weekly Laundry", "Cleaning Service", "Air Conditioning"],
+          "images": [
+              "https://example.com/fiha1.jpg",
+              "https://example.com/fiha2.jpg",
+              "https://example.com/fiha3.jpg",
+              "https://example.com/fiha4.jpg"
+          ],
+          "video": "https://example.com/fiha_video.mp4",
+          "availability": "Not Available",
+          "booking_duration": "Monthly",
+          "daily_booking": true,
+          "source": "https://ju.edu.jo"
+      },
+      {
+          "name": "Basim Dorms",
+          "location": "Near University Hospital",
+          "room_types": [
+              {"type": "Private Room", "price_JOD": 420},
+              {"type": "Shared Room", "price_JOD": 490}
+          ],
+          "services": ["Water", "Electricity", "Internet", "Weekly Laundry", "Cleaning Service", "Air Conditioning"],
+          "images": [
+              "https://example.com/basim1.jpg",
+              "https://example.com/basim2.jpg",
+              "https://example.com/basim3.jpg",
+              "https://example.com/basim4.jpg"
+          ],
+          "video": "https://example.com/basim_video.mp4",
+          "availability": "Available",
+          "booking_duration": "Annual",
+          "daily_booking": false,
+          "source": "https://ju.edu.jo"
+      },
+      {
+          "name": "Al-Rawda Dorms",
+          "location": "Near Jordan University, West Gate",
+          "room_types": [
+              {"type": "Single Room", "price_JOD": 350},
+              {"type": "Shared Room", "price_JOD": 275}
+          ],
+          "services": ["Security", "Internet", "Gym", "Study Rooms"],
+          "images": [
+              "https://example.com/rawda1.jpg",
+              "https://example.com/rawda2.jpg",
+              "https://example.com/rawda3.jpg",
+              "https://example.com/rawda4.jpg"
+          ],
+          "video": "https://example.com/rawda_video.mp4",
+          "availability": "Available",
+          "booking_duration": "Semester",
+          "daily_booking": false,
+          "source": "https://ju.edu.jo"
+      },
+      {
+          "name": "Elite Dorms",
+          "location": "Downtown Amman",
+          "room_types": [
+              {"type": "Single Room", "price_JOD": 400},
+              {"type": "Luxury Suite", "price_JOD": 600}
+          ],
+          "services": ["24/7 Security", "High-Speed Internet", "Housekeeping", "Rooftop Lounge"],
+          "images": [
+              "https://example.com/elite1.jpg",
+              "https://example.com/elite2.jpg",
+              "https://example.com/elite3.jpg",
+              "https://example.com/elite4.jpg"
+          ],
+          "video": "https://example.com/elite_video.mp4",
+          "availability": "Not Available",
+          "booking_duration": "Flexible",
+          "daily_booking": true,
+          "source": "https://example.com"
+      }
+  ]
+}
