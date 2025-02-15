@@ -13,17 +13,7 @@ Additionally, the website includes an **Admin Dashboard** for property managemen
 - **Admin Dashboard**: An administrative interface for managing users, properties, and other aspects of the platform.
 - **Responsive Design**: Access the website seamlessly on mobile and desktop devices.
 
-## Team Members
 
-- **SM (Scrum Master)**: Rami Abdelhamid
-- **PO (Product Owner)**: Deya’a Abualrub
-- **QA (Quality Assurance)**: Abdullah Ghawanmeh
-
-### Developers:
-
-- **Heba Maaitah**
-- **Ghofran Hijazi**
-- **Hala Abu Shehab**
 
 ## Admin Dashboard
 
