@@ -13,8 +13,9 @@ import done from "../assets/24-hours-support.png";
 import { IoClose } from "react-icons/io5";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
-
+import { useSelector ,useDispatch } from "react-redux";
+import { setHousingData } from "../Redux/ShowSlice";
+import { Link } from "react-router-dom";
 const universities = [
   {
     name: "الجامعة الأردنية",
@@ -144,25 +145,45 @@ const properties = [
 
 
 const Home = () => {
-  const navigate = useNavigate();
-
-  const [housingData, setHousingData] = useState([]);
+  const dispatch = useDispatch();
+  const housingData = useSelector((state) => state.showData?.housingData || []); // 🛠️ الآن لن يحدث الخطأ
 
   useEffect(() => {
     axios
       .get("https://rent-app-a210b-default-rtdb.firebaseio.com/student_housing.json")
       .then((response) => {
         if (response.data) {
-          // تحويل البيانات من كائن إلى مصفوفة
           const propertiesArray = Object.keys(response.data).map((key) => ({
             id: key,
             ...response.data[key],
           }));
-          setHousingData(propertiesArray);
+          dispatch(setHousingData(propertiesArray)); // 🛠️ تحديث Redux store
         }
       })
       .catch((error) => console.error("Error fetching data:", error));
-  }, []);
+  }, [dispatch]);
+
+
+ 
+  // const navigate = useNavigate();
+
+  // const [housingData, setHousingData] = useState([]);
+
+  // useEffect(() => {
+  //   axios
+  //     .get("https://rent-app-a210b-default-rtdb.firebaseio.com/student_housing.json")
+  //     .then((response) => {
+  //       if (response.data) {
+  //         // تحويل البيانات من كائن إلى مصفوفة
+  //         const propertiesArray = Object.keys(response.data).map((key) => ({
+  //           id: key,
+  //           ...response.data[key],
+  //         }));
+  //         setHousingData(propertiesArray);
+  //       }
+  //     })
+  //     .catch((error) => console.error("Error fetching data:", error));
+  // }, []);
 
 
 
@@ -212,33 +233,28 @@ const Home = () => {
 
   // cards الاحصائيات
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const isBooked = true; // غيّر هذه القيمة إلى false إذا كان العقار متاحًا
 
   // حالة الصور لكل بطاقة
   const [currentIndices, setCurrentIndices] = useState(
-    Array(properties.length).fill(0)
+    Array(properties.length).fill(0) // تخزين الصورة الحالية لكل بطاقة
   );
-
+  
   const nextSlide = (index) => {
-    setCurrentIndices((prev) =>
-      prev.map((currentIndex, i) =>
-        i === index
-          ? (currentIndex + 1) % properties[i].images.length
-          : currentIndex
-      )
-    );
+    setCurrentIndices((prevIndices) => {
+      const newIndices = [...prevIndices]; // نسخ المصفوفة لتحديثها
+      newIndices[index] = (newIndices[index] + 1) % properties[index].images.length; // زيادة المؤشر
+      return newIndices;
+    });
   };
-
+  
   const prevSlide = (index) => {
-    setCurrentIndices((prev) =>
-      prev.map((currentIndex, i) =>
-        i === index
-          ? (currentIndex - 1 + properties[i].images.length) %
-            properties[i].images.length
-          : currentIndex
-      )
-    );
+    setCurrentIndices((prevIndices) => {
+      const newIndices = [...prevIndices]; // نسخ المصفوفة لتحديثها
+      newIndices[index] =
+        (newIndices[index] - 1 + properties[index].images.length) %
+        properties[index].images.length; // تقليل المؤشر
+      return newIndices;
+    });
   };
 
 
@@ -267,12 +283,18 @@ const Home = () => {
     item.city.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  function itemInfo(item) {
+    dispatch(fetchselectedCourt(item)); // Dispatching the selected item
+    // No need to log selectedStadium here, as it's updated asynchronously
+  }
+
+
 
   return (
 
     <>
       {/*  hero section strat */}
-      <section className="relative flex flex-col items-center justify-center bg-[#F7F7F7] py-16">
+      <section className=" flex flex-col items-center justify-center bg-[#F7F7F7] py-45">
         <div className="flex flex-col-reverse md:flex-row justify-between items-center w-full max-w-6xl px-6">
           {/* Left Side (Text & Search Bar) */}
           <div className="text-center md:text-left">
@@ -452,7 +474,7 @@ const Home = () => {
                 ))}
               </div>
             </div>
-
+  
             <div className="p-4">
               <h3 className="text-lg font-semibold">{property.location}</h3>
               <p className="text-gray-600">{property.host}</p>
@@ -466,7 +488,7 @@ const Home = () => {
         onClick={() => handleMoreDetails(property.id)}
         className="mt-4 bg-white text-orange-500 border border-orange-500 py-2 px-4 rounded-lg transition-all duration-300 hover:bg-orange-500 hover:text-white hover:scale-105 focus:outline-none shadow-lg"
       >
-More Details      </button>
+Premium     </button>
             </div>
             
           </div>
@@ -589,9 +611,101 @@ More Details      </button>
 </h2>
 
 
-      <div className="p-6">
+
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 my-20 mx-auto  max-w-[90%]">
+  {housingData.slice(0, 4).map((property) => (
+
+  
+  <div
+    
+      key={property.id}
+      className="bg-white rounded-lg shadow-xl overflow-hidden transition-transform transform hover:scale-105 h-[550px]" // Increased width
+    >
+      {/* صورة العقار */}
+      <div className="relative w-full h-52"> {/* Increased height */}
+        <img
+          src={property.images}
+          alt={property.name}
+          className="w-full h-[300px] object-cover transition-opacity duration-500"        />
+
+        {/* شارة الحالة */}
+        <div
+                className={`absolute top-3 left-3 px-3 py-1 text-xs font-bold text-white uppercase rounded-lg ${
+                  property.isBooked ? "bg-red-500" : "bg-green-500"
+                } bg-opacity-90 shadow-md`}
+              >
+                {property.isBooked ? "Booked" : "Available"}
+              </div>
+
+        {/* نص الحالة فوق الشعار */}
+        {/* <div className="absolute top-3 left-1/2 transform -translate-x-1/2 text-white font-bold">
+          {property.status === "Available" ? "Not Booked" : "Booked"}
+        </div> */}
+
+        {/* أيقونة الحفظ */}
+        <span className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md cursor-pointer">
+          📅 {/* يمكن استبدالها بـ FontAwesome */}
+        </span>
+
+        {/* أسهم التنقل */}
+        <button
+                className="absolute top-35 left-3 transform -translate-y-1/2 bg-white bg-opacity-70 text-gray-800 p-2 rounded-full hover:bg-opacity-100"
+                onClick={() => prevSlide(index)}
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <button
+                className="absolute top-35   right-3 transform -translate-y-1/2 bg-white bg-opacity-70 text-gray-800 p-2 rounded-full hover:bg-opacity-100"
+                onClick={() => nextSlide(index)}
+              >
+                <ChevronRight size={24} />
+              </button>
+      </div>
+
+      {/* محتوى البطاقة */}
+      <div className="p-4 my-25">
+        <h3 className="text-lg font-semibold">{property.location}</h3>
+        <p className="text-gray-600">{property.name}</p>
+        <p className="text-gray-600">{property.description}</p>
+        <p className="mt-2 text-gray-800 text-sm">{property.date}</p>
+
+        {/* السعر والتقييم */}
+        <div className="flex justify-between items-center mt-2">
+          <span className="mt-4 text-xl font-bold">{property.price} JD /night</span>
+        </div>
+
+        {/* التقييم */}
+        <div className="flex items-center mt-2">
+          ⭐ 4.3 {property.rating} <span className="ml-2 text-green-500"> Guest favorite</span>
+        </div>
+
+        {/* زر التفاصيل */}
+        <Link to={"/PropertyDetails"}>
+        <button
+       
+        className="mt-4 bg-white text-orange-500 border border-orange-500 py-2 px-4 rounded-lg transition-all duration-300 hover:bg-orange-500 hover:text-white hover:scale-105 focus:outline-none shadow-lg" >
+        More Details
+        </button>
+        </Link> 
+
+
+
+       
+
+        
+        </div>
+        
+       </div>
+       
+  )
+  )}
+</div>
+
+
+{/* 
+      <div className="p-6"> */}
       {/* 🔹 عرض العقارات بتمرير أفقي */}
-      <div className="overflow-x-auto whitespace-nowrap py-8 px-15">
+      {/* <div className="overflow-x-auto whitespace-nowrap py-8 px-15">
         <div className="flex space-x-4 px-4 snap-x snap-mandatory">
           {housingData.length > 0 ? (
             housingData.map((item, index) => (
@@ -614,7 +728,7 @@ More Details      </button>
                   <p className="text-xl font-bold mt-2">{item.price || "N/A"}JD/Night</p>
 
                   {/* 🔹 زر "More Details" */}
-                  <button
+                  {/* <button
                     onClick={() => handleMoreDetails(item.id)}
                     className="mt-4 bg-white text-orange-500 border border-orange-500 py-2 px-4 rounded-lg transition-all duration-300 hover:bg-orange-500 hover:text-white hover:scale-105 focus:outline-none shadow-lg w-35"
                   >
@@ -628,7 +742,22 @@ More Details      </button>
           )}
         </div>
       </div>
-    </div>
+    </div> */} 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
       {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mx-auto max-w-[90%] my-20">
         {properties.map((property, index) => (
           <div
@@ -793,7 +922,7 @@ More Details      </button>
 <>
       {/* زر الخدمات العائم */}
       <button
-        className="fixed bottom-40 right-6  p-4  text-white rounded-full shadow-lg  transition transform hover:scale-110"
+        className="fixed bottom-40 right-6  p-4  text-white rounded-full shadow-lg  transition transform hover:scale-110 "
         onClick={() => setShowServices(!showServices)}
       >
         <img
@@ -804,7 +933,7 @@ More Details      </button>
 
         {/* القائمة الجانبية مع تأثيرات أجمل */}
         <div
-        className={`fixed top-0 right-0 h-full bg-white bg-opacity-80 backdrop-blur-lg shadow-2xl w-72 p-6 rounded-l-3xl transition-transform duration-500 ${
+        className={`fixed top-10 right-0  w-80  h-100  bg-white bg-opacity-80 backdrop-blur-lg shadow-2xl w-72 p-6 rounded-l-3xl transition-transform duration-500 ${
           showServices ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -843,16 +972,16 @@ More Details      </button>
 
       {/* final scroll section  */}
 
-      <div className="relative py-12 overflow-hidden">
+      <div className=" py-12  ">
         <h2 className="text-center text-3xl font-bold text-[#5C6BC0] mb-6 my-5 tracking-wide">
           University Partners
         </h2>
-        <div className="overflow-hidden">
+        <div className="relative z-">
           <div className="flex animate-marquee whitespace-nowrap my-10">
             {universities.concat(universities).map((university, index) => (
               <div
                 key={index}
-                className="mx-8 bg-white/20 backdrop-blur-lg p-4 rounded-xl shadow-lg flex items-center justify-center"
+                className=" mx-8 bg-white/20 backdrop-blur-lg p-4 rounded-xl shadow-lg flex items-center justify-center "
               >
                 <img
                   src={university.logo}
