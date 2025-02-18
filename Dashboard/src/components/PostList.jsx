@@ -7,6 +7,11 @@ import {
 } from "../redux/actions/postActions";
 import Swal from "sweetalert2";
 import axios from "axios";
+import Modal from "react-modal";
+import '../components/Postlist.css'
+import { Link } from "react-router-dom";
+// تأكد من تعيين العنصر الجذر لتنسيق الـ Modal
+Modal.setAppElement("#root");
 
 const firebaseUrl =
   "https://rent-app-a210b-default-rtdb.firebaseio.com/student_housing";
@@ -19,6 +24,10 @@ const PostList = () => {
   const [rejectReason, setRejectReason] = useState({});
   const [rejectedPosts, setRejectedPosts] = useState(new Set());
   const [approvedPosts, setApprovedPosts] = useState({});
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+const [searchQuery, setSearchQuery] = useState("");
+const [filterBy, setFilterBy] = useState("name");
 
   useEffect(() => {
     dispatch(fetchPosts());
@@ -69,7 +78,10 @@ const PostList = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .patch(`${firebaseUrl}/${firebaseKey}.json`, { approve: true })
+          .patch(`${firebaseUrl}/${firebaseKey}.json`, {
+            approve: true,
+            role: "owner", // Ensure role is set to "owner"
+          })
           .then(() => {
             setApprovedPosts((prev) => ({ ...prev, [firebaseKey]: true }));
             Swal.fire("Approved!", "The post has been approved.", "success");
@@ -123,120 +135,205 @@ const PostList = () => {
     }
   };
 
+  const openModal = (post) => {
+    setSelectedPost(post);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedPost(null);
+  };
+
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = posts.slice(indexOfFirstPost, indexOfLastPost);
   const totalPages = Math.ceil(posts.length / postsPerPage);
 
-  return (
-    <div className="p-4 max-w-6xl mx-auto">
-      <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-6">
-        Available Apartments
-      </h2>
+const filteredPosts = currentPosts.filter((post) => {
+  const valueToSearch = post[filterBy]?.toString().toLowerCase() || "";
+  return valueToSearch.includes(searchQuery.toLowerCase());
+});
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {currentPosts
-          .filter((post) => !rejectedPosts.has(post.firebaseKey))
-          .map((post) => (
-            <div
-              key={post.firebaseKey}
-              className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-lg rounded-lg p-6"
-            >
-              <div className="relative mb-4">
-                <div className="flex space-x-2">
-                  <img
-                    src={post.images || "https://via.placeholder.com/150"}
-                    alt={post.name || "Post Image"}
-                    className="w-1/2 h-40 object-cover rounded-lg"
-                  />
-                  <img
-                    src={post.thumbnail || "https://via.placeholder.com/150"}
-                    alt={post.name || "Post Image"}
-                    className="w-1/2 h-40 object-cover rounded-lg"
-                  />
-                </div>
-                <a
-                  href={post.thumbnail}
-                  download={`image-${post.name || "download"}.jpg`}
-                  className="absolute bottom-1 right-1 bg-blue-500 text-white px-1 py-1 rounded-md text-sm"
-                >
-                  ⬇ Download
-                </a>
-              </div>
+return (
+  <div className="p-4 max-w-6xl mx-auto bg-white text-gray-900">
+    <h2 className="text-2xl font-semibold text-gray-900 mb-6 border-b pb-2">
+      Properties
+    </h2>
 
-              <div className="text-sm text-gray-700 dark:text-gray-300 space-y-2">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-                  <strong>Name: </strong>
-                  {post.name || "No Name"}
-                </h3>
-                <p>
-                  <strong className="text-red-500">Description: </strong>
-                  {post.description || "No Description"}
-                </p>
-                <p>
-                  <strong className="text-blue-500">Location:</strong>{" "}
-                  {post.location || "N/A"}
-                </p>
-                <p>
-                  <strong className="text-green-500">Price:</strong>{" "}
-                  {post.price || "N/A"} JD / Night
-                </p>
-              </div>
-
-              {!approvedPosts[post.firebaseKey] && (
-                <div className="mt-4 flex space-x-2">
-                  <button
-                    onClick={() => handleApprove(post.firebaseKey)}
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md transition-colors"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleReject(post.firebaseKey)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors"
-                  >
-                    Reject
-                  </button>
-                </div>
-              )}
-
-              {rejectReason[post.firebaseKey] !== undefined && (
-                <div className="mt-2">
-                  <textarea
-                    value={rejectReason[post.firebaseKey]}
-                    onChange={(e) => handleRejectChange(post.firebaseKey, e)}
-                    placeholder="Please enter the reason for rejection"
-                    className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white"
-                  />
-                  <button
-                    onClick={() => handleSubmitReject(post.firebaseKey)}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 mt-2 rounded-md transition-colors"
-                  >
-                    Submit Reason
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+    {/* Search and Filter */}
+    <div className="flex justify-between items-center mb-4">
+      <div className="flex items-center space-x-2">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="p-2 border rounded-md bg-gray-50"
+        />
+        <select
+          value={filterBy}
+          onChange={(e) => setFilterBy(e.target.value)}
+          className="p-2 border rounded-md bg-gray-50"
+        >
+          <option value="name">Name</option>
+          <option value="location">Location</option>
+          <option value="price">Price</option>
+        </select>
       </div>
 
-      <div className="mt-6 flex justify-center space-x-2">
-        {Array.from({ length: totalPages }, (_, index) => (
-          <button
-            key={index + 1}
-            onClick={() => setCurrentPage(index + 1)}
-            className={`px-3 py-1 rounded-md ${
-              currentPage === index + 1
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 dark:bg-gray-700 dark:text-white"
-            }`}
-          >
-            {index + 1}
-          </button>
-        ))}
-      </div>
+      <Link
+        to="/AddPost"
+        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors shadow-md ml-auto"
+      >
+        Add new property
+      </Link>
     </div>
-  );
+
+    {/* Posts List */}
+    <div className="space-y-4">
+      {filteredPosts
+        .filter((post) => !rejectedPosts.has(post.firebaseKey))
+        .map((post) => (
+          <div
+            key={post.firebaseKey}
+            className="bg-gray-100 border border-gray-300 shadow-md rounded-lg p-4 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => openModal(post)}
+          >
+            <h3 className="text-lg font-semibold text-gray-900">
+              {post.name || "No Name"}
+            </h3>
+            <p className="text-sm text-gray-600">{post.location || "N/A"}</p>
+            <p className="text-sm text-gray-600">
+              {post.price ? `${post.price} JD / Night` : "N/A"}
+            </p>
+          </div>
+        ))}
+    </div>
+
+    {/* Pagination */}
+    <div className="mt-6 flex justify-center space-x-2">
+      {Array.from({ length: totalPages }, (_, index) => (
+        <button
+          key={index + 1}
+          onClick={() => setCurrentPage(index + 1)}
+          className={`px-3 py-1 rounded-md shadow-md ${
+            currentPage === index + 1
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+          }`}
+        >
+          {index + 1}
+        </button>
+      ))}
+    </div>
+
+    {/* Popup (Modal) */}
+    <Modal
+      isOpen={isModalOpen}
+      onRequestClose={closeModal}
+      contentLabel="Apartment Details"
+      className="modal"
+      overlayClassName="overlay"
+    >
+      {selectedPost && (
+        <div className="bg-white p-6 rounded-lg max-w-lg mx-auto">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+            {selectedPost.name || "No Name"}
+          </h2>
+
+          <div className="relative mb-4">
+            <div className="flex space-x-2">
+              <img
+                src={selectedPost.images || "https://via.placeholder.com/150"}
+                alt={selectedPost.name || "Post Image"}
+                className="w-1/2 h-40 object-cover rounded-lg border"
+              />
+              <img
+                src={
+                  selectedPost.thumbnail || "https://via.placeholder.com/150"
+                }
+                alt={selectedPost.name || "Post Image"}
+                className="w-1/2 h-40 object-cover rounded-lg border"
+              />
+            </div>
+            <a
+              href={selectedPost.thumbnail}
+              download={`image-${selectedPost.name || "download"}.jpg`}
+              className="absolute bottom-1 right-1 bg-blue-600 text-white px-2 py-1 rounded-md text-sm shadow-md"
+            >
+              ⬇ Download
+            </a>
+          </div>
+
+          <div className="text-sm text-gray-700 space-y-2">
+            <p>
+              <strong className="text-red-600">Description: </strong>
+              {selectedPost.description || "No Description"}
+            </p>
+            <p>
+              <strong className="text-blue-600">Location:</strong>{" "}
+              {selectedPost.location || "N/A"}
+            </p>
+            <p>
+              <strong className="text-green-600">Price:</strong>{" "}
+              {selectedPost.price || "N/A"} JD / Night
+            </p>
+          </div>
+
+          {!approvedPosts[selectedPost.firebaseKey] && (
+            <div className="mt-4 flex space-x-2">
+              <button
+                onClick={() => {
+                  handleApprove(selectedPost.firebaseKey);
+                  closeModal();
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors shadow-md"
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => handleReject(selectedPost.firebaseKey)}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors shadow-md"
+              >
+                Reject
+              </button>
+            </div>
+          )}
+
+          {rejectReason[selectedPost.firebaseKey] !== undefined && (
+            <div className="mt-2">
+              <textarea
+                value={rejectReason[selectedPost.firebaseKey]}
+                onChange={(e) =>
+                  handleRejectChange(selectedPost.firebaseKey, e)
+                }
+                placeholder="Please enter the reason for rejection"
+                className="w-full p-2 border rounded-md bg-gray-50 text-gray-900"
+              />
+              <button
+                onClick={() => {
+                  handleSubmitReject(selectedPost.firebaseKey);
+                  closeModal();
+                }}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 mt-2 rounded-md transition-colors shadow-md"
+              >
+                Submit Reason
+              </button>
+            </div>
+          )}
+
+          <button
+            onClick={closeModal}
+            className="mt-4 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors shadow-md"
+          >
+            Close
+          </button>
+        </div>
+      )}
+    </Modal>
+  </div>
+);
 };
 
 export default PostList;

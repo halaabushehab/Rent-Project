@@ -19,11 +19,12 @@ import {
   AreaChart,
   Area,
 } from "recharts";
-import { Moon, Sun, LogOut, Settings, Users, Home, Mail } from "lucide-react";
+import { LogOut, Settings, Users, Home, Mail } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
-  const [darkMode, setDarkMode] = useState(true);
+  const [selectedSidebarItem, setSelectedSidebarItem] = useState("home");
   const posts = useSelector((state) => state.posts.posts);
   const users = useSelector((state) => state.users.users);
   const contacts = useSelector((state) => state.contacts.contacts);
@@ -70,94 +71,80 @@ const Dashboard = () => {
   };
 
   return (
-    <div
-      className={
-        darkMode ? "dark bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
-      }
-    >
+    <div className="bg-white text-gray-900">
       <div className="flex">
-        <Sidebar />
-        <div className="flex-1 ml-64 p-6 min-h-screen transition-colors duration-300">
+        <Sidebar
+          setSelectedItem={setSelectedSidebarItem}
+          selectedItem={selectedSidebarItem}
+        />
+        <div className="flex-1 ml-64 p-6 min-h-screen">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <div>
               <h2 className="text-3xl font-bold">Welcome Back, Admin</h2>
-              <p className="text-gray-500 dark:text-gray-400">
-                Here's what's happening today
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className="p-2 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
-              >
-                {darkMode ? (
-                  <Sun className="text-yellow-400" />
-                ) : (
-                  <Moon className="text-gray-600" />
-                )}
-              </button>
+              <p className="text-gray-500">Here's what's happening today</p>
             </div>
           </div>
-
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             {[
               {
-                title: "Total Users",
+                title: "Users",
                 value: totalUsers,
                 icon: Users,
                 color: "bg-blue-500",
+                path: "/UserList",
               },
               {
-                title: "Total Posts",
+                title: "Properties",
                 value: totalPosts,
                 icon: Home,
                 color: "bg-green-500",
+                path: "/PostList",
               },
               {
-                title: " Total Messages",
+                title: "E-mail",
                 value: totalMessages,
                 icon: Mail,
                 color: "bg-purple-500",
+                path: "/ContactList",
               },
               {
-                title: "Total Bookings",
+                title: "Bookings",
                 value: totalBookings,
                 icon: Mail,
                 color: "bg-yellow-500",
+                path: "/BookingsList",
               },
             ].map((card) => {
               const IconComponent = card.icon;
               return (
-                <div
-                  key={card.title}
-                  className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        {card.title}
-                      </p>
-                      <h3 className="text-2xl font-bold mt-1">{card.value}</h3>
-                    </div>
-                    <div className={`${card.color} p-3 rounded-lg`}>
-                      <IconComponent className="text-white" size={24} />
+                <Link to={card.path} key={card.title} className="block">
+                  <div className="bg-white border border-gray-300 rounded-xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-gray-500">{card.title}</p>
+                        <h3 className="text-2xl font-bold mt-1 text-gray-900">
+                          {card.value}
+                        </h3>
+                      </div>
+                      <div className={`${card.color} p-3 rounded-lg`}>
+                        <IconComponent className="text-white" size={24} />
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
-
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+            <div className="bg-white p-6 rounded-xl shadow-lg">
               <h3 className="text-xl font-semibold mb-4">Monthly Overview</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={monthlyData}>
-                  <XAxis dataKey="name" stroke={darkMode ? "#fff" : "#333"} />
-                  <YAxis stroke={darkMode ? "#fff" : "#333"} />
+                  <XAxis dataKey="name" />
+                  <YAxis />
                   <Tooltip content={<CustomTooltip />} />
                   <Area
                     type="monotone"
@@ -191,12 +178,12 @@ const Dashboard = () => {
               </ResponsiveContainer>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+            <div className="bg-white p-6 rounded-xl shadow-lg">
               <h3 className="text-xl font-semibold mb-4">Statistics</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={monthlyData}>
-                  <XAxis dataKey="name" stroke={darkMode ? "#fff" : "#333"} />
-                  <YAxis stroke={darkMode ? "#fff" : "#333"} />
+                  <XAxis dataKey="name" />
+                  <YAxis />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
                   <Bar dataKey="users" fill="#3B82F6" radius={[4, 4, 0, 0]} />
@@ -215,58 +202,50 @@ const Dashboard = () => {
               </ResponsiveContainer>
             </div>
           </div>
-
           {/* Content Sections */}
           <div className="space-y-8">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <div className="bg-white rounded-xl shadow-lg p-6">
               <Postlist />
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <div className="bg-white rounded-xl shadow-lg p-6">
               <UserList />
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-              <ContactList />
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-semibold mb-4">Bookings</h3>
-              <div className="overflow-x-auto">
-                <table className="min-w-full bg-white dark:bg-gray-800">
-                  <thead>
-                    <tr>
-                      <th className="px-6 py-3 border-b-2 border-gray-200 dark:border-gray-700 text-left text-sm font-semibold">
-                        User
-                      </th>
-                      <th className="px-6 py-3 border-b-2 border-gray-200 dark:border-gray-700 text-left text-sm font-semibold">
-                        Start Date
-                      </th>
-                      <th className="px-6 py-3 border-b-2 border-gray-200 dark:border-gray-700 text-left text-sm font-semibold">
-                        End Date
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bookings &&
-                      Object.keys(bookings).map((key, index) => {
-                        const booking = bookings[key];
-                        return (
-                          <tr key={index}>
-                            <td className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">
-                              {booking.name || "N/A"}
-                            </td>
-                            <td className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">
-                              {booking.startDate || "N/A"}
-                            </td>
+            
 
-                            <td className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 text-sm">
-                              {booking.endDate || "N/A"}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
+    <div className="p-6 max-w-5xl mx-auto bg-gray-50 ">
+      <h2 className="text-2xl font-semibold text-gray-900 mb-8">Messages</h2>
+
+      <div className="space-y-4">
+        {contacts.map((contact) => (
+          <Link
+            key={contact.id}
+            to={`/contact/${contact.id}`} // Navigates to details page
+            className="block bg-white border border-gray-200 shadow-md rounded-lg p-4 hover:shadow-lg hover:bg-gray-100 transition-all"
+          >
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-gray-600 font-semibold">
+                  {contact.email}
+                </p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {contact.subject || "No Subject"}
+                </p>
               </div>
+
+              {/* Unread message indicator */}
+              <div className="bg-red-500 w-3 h-3 rounded-full"></div>
             </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+
+
+
+
+
+
+
           </div>
         </div>
       </div>

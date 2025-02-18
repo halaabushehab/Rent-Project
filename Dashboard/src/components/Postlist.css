@@ -1,0 +1,35 @@
+
+
+
+.modal {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    /* لجعلها متجاوبة */
+    max-height: 90vh;
+    /* لا تتجاوز ارتفاع الشاشة */
+    overflow-y: auto;
+    /* التمرير عند الحاجة */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+}
+
+.overlay {
+    background: rgba(0, 0, 0, 0.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+

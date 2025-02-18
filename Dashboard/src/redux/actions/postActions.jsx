@@ -35,8 +35,10 @@ export const fetchPosts = () => async (dispatch) => {
 export const approvePost = (firebaseKey) => async (dispatch) => {
   try {
     await axiosInstance.patch(`/student_housing/${firebaseKey}.json`, {
-      approve: true,
-    });
+      approve: true,role:"owner"
+    },
+
+  );
 
     dispatch({ type: "APPROVE_POST", payload: firebaseKey });
 

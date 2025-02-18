@@ -18,7 +18,7 @@ const postReducer = (state = initialState, action) => {
       return {
         ...state,
         posts: state.posts.map((post) =>
-          post.id === action.payload ? { ...post, approved: true } : post
+          post.id === action.payload ? { ...post, approved: true, role: "owner" } : post
         ),
       };
     case "DELETE_POST":

@@ -12,6 +12,7 @@ import PostList from "./components/PostList";
 import BlockedUsers from "./components/BlockedUsers";
 import Layout from "./components/Layout"; // استيراد الـ Layout
 import ContactList from "./components/ContactList"; 
+import BookingsList from './components/BookingsList';
 
 const App = () => {
   return (
@@ -70,6 +71,14 @@ const App = () => {
             element={
               <Layout>
                 <BlockedUsers />
+              </Layout>
+            }
+          />
+          <Route
+            path="/BookingsList"
+            element={
+              <Layout>
+                <BookingsList />
               </Layout>
             }
           />
