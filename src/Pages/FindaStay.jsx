@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
-import { fetchselectedCourt } from "../Redux/propertySlice";
+import { fetchSelectedCourt } from "../Redux/propertySlice";
 import { Link } from "react-router-dom";
 export default function FindStay() {
   const url =
@@ -42,7 +42,7 @@ export default function FindStay() {
   }, [selectedStadium]);
 
   function itemInfo(item) {
-    dispatch(fetchselectedCourt(item)); // Dispatching the selected item
+    dispatch(fetchSelectedCourt(item)); // Dispatching the selected item
     // No need to log selectedStadium here, as it's updated asynchronously
   }
 

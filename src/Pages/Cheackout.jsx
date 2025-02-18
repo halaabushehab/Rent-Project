@@ -1,290 +1,485 @@
 import { useState } from "react";
+import emailjs from "emailjs-com";
+import { useLocation } from "react-router-dom";
+import { getDatabase, ref, set, update, get } from "firebase/database";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import jsPDF from "jspdf";
+import Swal from "sweetalert2";
+import axios from "axios";
+import { useSelector } from "react-redux";
 
-const Cheackout = () => {
+const Checkout = () => {
+  const location = useLocation();
+  const { propertyId, ...bookingData } = location.state || {};
   const [paymentMethod, setPaymentMethod] = useState("creditCard");
   const [paymentInfo, setPaymentInfo] = useState({
     cardNumber: "",
     expiryDate: "",
     cvv: "",
     cardHolder: "",
-    billingAddress: "",
     email: "",
   });
+  const selectedProperty = useSelector(
+    (state) => state.courtInfo.selectedCourt
+  );
+
+  console.log("Selected Property from Redux:", selectedProperty);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
-  const [fromDate, setFromDate] = useState(""); // From date
-  const [toDate, setToDate] = useState(""); // To date
-  const [pricePerMonth] = useState(200); // Example price per month
-
-  const rentalPeriod =
-    fromDate && toDate ? calculateRentalPeriod(fromDate, toDate) : 0;
-  const totalAmount = rentalPeriod * pricePerMonth; // Total amount based on rental period
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("Booking Confirmation", 20, 20);
+    doc.setFontSize(12);
+    let y = 40;
+    Object.entries(bookingData).forEach(([key, value]) => {
+      doc.text(`${key.replace(/([A-Z])/g, " $1").trim()}: ${value}`, 20, y);
+      y += 10;
+    });
+    doc.text(`Total Amount: $${bookingData.price}`, 20, y);
+    doc.save("Booking_Confirmation.pdf");
+  };
 
   const handleChange = (e) => {
     setPaymentInfo({ ...paymentInfo, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    /************************************************************************************************************ */
+    // const fetchStudentHousingData = async () => {
+    //   try {
+    //     const firebaseURL =
+    //       "https://rent-app-a210b-default-rtdb.firebaseio.com/student_housing.json";
+
+    //     const response = await axios.get(firebaseURL);
+
+    //     console.log("بيانات student_housing:", response.data);
+
+    //     // سيتم طباعة جميع البيانات مع الـ keys الخاصة بها في الكونسول
+    //   } catch (error) {
+    //     console.error("حدث خطأ أثناء جلب البيانات:", error);
+    //   }
+    // };
+
+    // // استدعاء الدالة
+    // fetchStudentHousingData();
+    /************************************************************************************************************ */
+
+    emailjs
+      .send(
+        "service_jrtimzn",
+        "template_ahjbd9q",
+        {
+          name: bookingData.name,
+          email: bookingData.email,
+          to_email: bookingData.email,
+          roomType: bookingData.roomType,
+          Totalamount: bookingData.price,
+          startDate: bookingData.startDate,
+          endDate: bookingData.endDate,
+
+          //  message: `Your booking for ${bookingData.roomType} has been confirmed. Total amount: $${bookingData.price}`,
+        },
+        "Uqobi9sYP10iyftG-"
+      )
+      .then(
+        (result) => {
+          Swal.fire({
+            icon: "success",
+            title: "Payment succsseful",
+            text: "Something went wrong!",
+            html: `<button id="downloadPDF" style="background-color:#007BFF; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; margin-top:10px;">
+            Download PDF
+         </button>`,
+            didOpen: () => {
+              document
+                .getElementById("downloadPDF")
+                .addEventListener("click", generatePDF);
+            },
+          });
+        },
+        (error) => {
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: "Something went wrong!",
+          });
+        }
+      );
     if (!agreeTerms) {
       alert("You must agree to the Terms & Conditions before proceeding.");
       return;
     }
-    console.log("Payment Details Submitted:", {
-      paymentMethod,
-      ...paymentInfo,
-    });
-    alert(`Payment via ${paymentMethod} processed successfully!`);
+    const db = getDatabase();
+    const bookingRef = ref(db, `bookings/${bookingData.name}`);
+    await set(bookingRef, bookingData);
+    if (paymentMethod === "paypal") {
+      return;
+    } else {
+      Swal.fire({
+        icon: "success",
+        title: `Payment via ${paymentMethod} processed successfully!`,
+        text: "Something went wrong!",
+        html: `<button id="downloadPDF" style="background-color:#007BFF; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer; margin-top:10px;">
+            Download PDF
+         </button>`,
+        didOpen: () => {
+          document
+            .getElementById("downloadPDF")
+            .addEventListener("click", generatePDF);
+        },
+      });
+      // alert(`Payment via ${paymentMethod} processed successfully!`);
+    }
   };
 
-  // Calculate rental period in months
-  const calculateRentalPeriod = (start, end) => {
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    const diffInTime = endDate - startDate; // difference in milliseconds
-    return Math.ceil(diffInTime / (1000 * 3600 * 24 * 30)); // convert to months
+  const onPayPalApprove = async (data, actions) => {
+    try {
+      const order = await actions.order.capture();
+      const db = getDatabase();
+      const housingRef = ref(db, "student_housing");
+      const snapshot = await get(housingRef);
+
+      let firebaseGeneratedId = null;
+      snapshot.forEach((childSnapshot) => {
+        const housingData = childSnapshot.val();
+        if (housingData.id === propertyId) {
+          firebaseGeneratedId = childSnapshot.key;
+        }
+      });
+
+      if (!firebaseGeneratedId) {
+        throw new Error("No matching property found in Firebase.");
+      }
+
+      const housingUpdateRef = ref(
+        db,
+        `student_housing/${firebaseGeneratedId}`
+      );
+      const updates = { availability: false };
+      await update(housingUpdateRef, updates);
+
+      emailjs
+        .send(
+          "service_jrtimzn",
+          "template_ahjbd9q",
+          {
+            name: bookingData.name,
+            email: bookingData.email,
+            to_email: bookingData.email,
+            roomType: bookingData.roomType,
+            Totalamount: bookingData.price,
+            startDate: bookingData.startDate,
+            endDate: bookingData.endDate,
+            filename: "Booking_Confirmation.pdf",
+          },
+          "Uqobi9sYP10iyftG-"
+        )
+        .then(
+          (result) => {
+            alert("Booking confirmed! Check your email for details.");
+          },
+          (error) => {
+            Swal.fire({
+              icon: "error",
+              title: "Oops...",
+              text: "Something went wrong!",
+            });
+          }
+        );
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Something went wrong!",
+      });
+    }
   };
 
   return (
-    <div className="flex flex-col space-y-6">
-      {/* Rental Summary Section - Moved Outside */}
-      <div className="max-w-lg mx-auto bg-gray-100 p-4 rounded-lg shadow-sm border-l-4 border-blue-500">
-        <h3 className="text-lg font-semibold text-gray-700 mb-4">
-          Rental Summary
-        </h3>
-
-        {/* From & To Date */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block text-gray-600 text-sm font-medium">
-              From Date
-            </label>
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
+    <PayPalScriptProvider
+      options={{
+        "client-id":
+          "AQO_lrXGFsV-gcb9dl11jWIu-BW84qeQbOxa31FnSsbeJj_fpHAMK3sb-c2aJjJSnjuaN4CDAxvT3tL1",
+        currency: "USD",
+      }}
+    >
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h1 className="text-3xl font-bold text-[#091057]">
+              Complete Your Booking
+            </h1>
+            <p className="mt-2 text-gray-600">
+              Secure payment process with instant confirmation
+            </p>
           </div>
-          <div>
-            <label className="block text-gray-600 text-sm font-medium">
-              To Date
-            </label>
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-          </div>
-        </div>
 
-        {/* Price Per Month and Total Amount */}
-        <div className="flex justify-between mb-4">
-          <span className="text-sm text-gray-600">Price per Month</span>
-          <span className="text-sm font-medium text-gray-700">
-            ${pricePerMonth}
-          </span>
-        </div>
-
-        <div className="flex justify-between mb-4">
-          <span className="text-sm text-gray-600">Rental Period (Months)</span>
-          <span className="text-sm font-medium text-gray-700">
-            {rentalPeriod || 0} months
-          </span>
-        </div>
-
-        <div className="flex justify-between font-semibold text-gray-700">
-          <span>Total Amount</span>
-          <span>${totalAmount || 0}</span>
-        </div>
-      </div>
-
-      {/* Payment Details Section */}
-      <div className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">
-          Payment Details
-        </h2>
-
-        {/* Payment Method Selection */}
-        <div className="mb-4">
-          <label className="block text-gray-600 text-sm font-medium">
-            Choose Payment Method
-          </label>
-          <select
-            value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="creditCard">Credit Card</option>
-            <option value="paypal">PayPal</option>
-            <option value="googlePay">Google Pay</option>
-          </select>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {paymentMethod === "creditCard" && (
-            <>
-              <div>
-                <label className="block text-gray-600 text-sm font-medium">
-                  Card Number
-                </label>
-                <input
-                  type="text"
-                  name="cardNumber"
-                  placeholder="1234 5678 9012 3456"
-                  maxLength="16"
-                  value={paymentInfo.cardNumber}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  required
-                />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            {/* Rental Summary Card */}
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden h-fit">
+              <div className="bg-[#EC8305] px-6 py-4">
+                <h2 className="text-xl font-semibold text-white">
+                  Rental Summary
+                </h2>
               </div>
-
-              <div className="flex space-x-4">
-                <div className="w-1/2">
-                  <label className="block text-gray-600 text-sm font-medium">
-                    Expiry Date
-                  </label>
-                  <input
-                    type="text"
-                    name="expiryDate"
-                    placeholder="MM/YY"
-                    maxLength="5"
-                    value={paymentInfo.expiryDate}
-                    onChange={handleChange}
-                    className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    required
-                  />
-                </div>
-
-                <div className="w-1/2">
-                  <label className="block text-gray-600 text-sm font-medium">
-                    CVV
-                  </label>
-                  <input
-                    type="password"
-                    name="cvv"
-                    placeholder="123"
-                    maxLength="3"
-                    value={paymentInfo.cvv}
-                    onChange={handleChange}
-                    className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    required
-                  />
+              <div className="p-6 space-y-6">
+                {Object.entries(bookingData).map(
+                  ([key, value]) =>
+                    key !== "price" && (
+                      <div key={key} className="flex flex-col space-y-1">
+                        <label className="text-sm font-medium text-gray-600 capitalize">
+                          {key.replace(/([A-Z])/g, " $1").trim()}
+                        </label>
+                        <input
+                          type="text"
+                          value={value}
+                          disabled
+                          className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700"
+                        />
+                      </div>
+                    )
+                )}
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-semibold text-gray-900">
+                      Total Amount
+                    </span>
+                    <span className="text-2xl font-bold text-[#091057]">
+                      ${bookingData.price}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </>
-          )}
-
-          {(paymentMethod === "paypal" || paymentMethod === "googlePay") && (
-            <div>
-              <label className="block text-gray-600 text-sm font-medium">
-                {paymentMethod === "paypal"
-                  ? "PayPal Email"
-                  : "Google Pay Email"}
-              </label>
-              <input
-                type="email"
-                name="email"
-                placeholder="you@example.com"
-                value={paymentInfo.email}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                required
-              />
             </div>
-          )}
 
-          {/* Terms & Conditions Checkbox */}
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="terms"
-              checked={agreeTerms}
-              onChange={() => setAgreeTerms(!agreeTerms)}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-400"
-            />
-            <label htmlFor="terms" className="text-sm text-gray-600">
-              I agree to the{" "}
-              <button
-                type="button"
-                onClick={() => setShowTerms(true)}
-                className="text-blue-600 hover:underline"
-              >
-                Terms & Conditions
-              </button>
-            </label>
+            {/* Payment Details Card */}
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+              <div className="bg-[#EC8305] px-6 py-4">
+                <h2 className="text-xl font-semibold text-white">
+                  Payment Details
+                </h2>
+              </div>
+              <div className="p-6">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Payment Method
+                    </label>
+                    <select
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="creditCard">Credit Card</option>
+                      <option value="paypal">PayPal</option>
+                      <option value="googlePay">Google Pay</option>
+                    </select>
+                  </div>
+
+                  {paymentMethod === "creditCard" && (
+                    <div className="space-y-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Card Number
+                        </label>
+                        <input
+                          type="text"
+                          name="cardNumber"
+                          placeholder="1234 5678 9012 3456"
+                          maxLength="16"
+                          value={paymentInfo.cardNumber}
+                          onChange={handleChange}
+                          className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          required
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Expiry Date
+                          </label>
+                          <input
+                            type="text"
+                            name="expiryDate"
+                            placeholder="MM/YY"
+                            maxLength="5"
+                            value={paymentInfo.expiryDate}
+                            onChange={handleChange}
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            CVV
+                          </label>
+                          <input
+                            type="password"
+                            name="cvv"
+                            placeholder="123"
+                            maxLength="3"
+                            value={paymentInfo.cvv}
+                            onChange={handleChange}
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {(paymentMethod === "paypal" ||
+                    paymentMethod === "googlePay") && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {paymentMethod === "paypal"
+                          ? "PayPal Email"
+                          : "Google Pay Email"}
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        placeholder="you@example.com"
+                        value={paymentInfo.email}
+                        onChange={handleChange}
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {paymentMethod === "paypal" && (
+                    <div className="mt-4">
+                      <PayPalButtons
+                        createOrder={(data, actions) => {
+                          return actions.order.create({
+                            purchase_units: [
+                              {
+                                amount: {
+                                  value: bookingData.price,
+                                },
+                              },
+                            ],
+                          });
+                        }}
+                        onApprove={onPayPalApprove}
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center space-x-2 mt-6">
+                    <input
+                      type="checkbox"
+                      id="terms"
+                      checked={agreeTerms}
+                      onChange={() => setAgreeTerms(!agreeTerms)}
+                      className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="terms" className="text-sm text-gray-600">
+                      I agree to the{" "}
+                      <button
+                        type="button"
+                        onClick={() => setShowTerms(true)}
+                        className="text-[#EC8305] hover:text-blue-800 font-medium"
+                      >
+                        Terms & Conditions
+                      </button>
+                    </label>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className={`w-full py-4 rounded-lg text-lg font-semibold transition duration-200 ${
+                      agreeTerms
+                        ? "bg-[#EC8305] hover:bg-[#EC8305] text-white"
+                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    }`}
+                    disabled={!agreeTerms}
+                  >
+                    Complete Payment
+                  </button>
+                </form>
+                <button
+                  onClick={generatePDF}
+                  className="mt-4 w-full bg-blue-600 text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition duration-200"
+                >
+                  Download PDF
+                </button>
+              </div>
+            </div>
           </div>
+        </div>
 
-          <button
-            type="submit"
-            className={`w-full text-white py-2 rounded-lg transition duration-200 ${
-              agreeTerms
-                ? "bg-blue-600 hover:bg-blue-700"
-                : "bg-gray-400 cursor-not-allowed"
-            }`}
-            disabled={!agreeTerms}
-          >
-            Pay Now
-          </button>
-        </form>
-
-        {/* Terms & Conditions Modal */}
+        {/* Terms Modal */}
         {showTerms && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
-            onClick={() => setShowTerms(false)}
-          >
-            <div
-              className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-2xl max-h-[80vh] overflow-y-auto relative"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                Terms & Conditions
-              </h3>
-              <div className="text-sm text-gray-600 space-y-2">
-                <p>
-                  By renting from <b>[Your Company Name]</b>, you agree to the
-                  following terms:
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+            <div className="bg-white rounded-2xl shadow-xl w-11/12 max-w-2xl max-h-[80vh] overflow-y-auto">
+              <div className="bg-blue-600 px-6 py-4 flex justify-between items-center">
+                <h3 className="text-xl font-semibold text-white">
+                  Terms & Conditions
+                </h3>
+                <button
+                  onClick={() => setShowTerms(false)}
+                  className="text-white hover:text-gray-200"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <p className="text-gray-700">
+                  By renting from <b>HabiRent</b>, you agree to the following
+                  terms:
                 </p>
-                <ul className="list-disc ml-5 space-y-1">
-                  <li>
+                <ul className="space-y-2 text-gray-600">
+                  <li className="flex items-start">
+                    <span className="mr-2">•</span>
                     The rental period starts from the date of pickup/delivery.
                   </li>
-                  <li>Late returns may result in additional charges.</li>
-                  <li>A refundable security deposit may be required.</li>
-                  <li>
+                  <li className="flex items-start">
+                    <span className="mr-2">•</span>
+                    Late returns may result in additional charges.
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-2">•</span>A refundable security deposit
+                    may be required.
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-2">•</span>
                     The renter is responsible for any damages beyond normal wear
                     and tear.
                   </li>
-                  <li>
+                  <li className="flex items-start">
+                    <span className="mr-2">•</span>
                     Cancellations must be made within [X] days for a refund.
                   </li>
-                  <li>
+                  <li className="flex items-start">
+                    <span className="mr-2">•</span>
                     The rental provider is not liable for injuries or losses.
                   </li>
-                  <li>This agreement follows the laws of [Your Location].</li>
+                  <li className="flex items-start">
+                    <span className="mr-2">•</span>
+                    This agreement follows the laws of [Your Location].
+                  </li>
                 </ul>
-                <p>
-                  By proceeding with the rental, you confirm that you have read,
-                  understood, and agreed to these terms.
-                </p>
-              </div>
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={() => setShowTerms(false)}
-                  className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
-                >
-                  Close
-                </button>
+                <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end">
+                  <button
+                    onClick={() => setShowTerms(false)}
+                    className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition duration-200"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         )}
       </div>
-    </div>
+    </PayPalScriptProvider>
   );
 };
 
-export default Cheackout;
+export default Checkout;

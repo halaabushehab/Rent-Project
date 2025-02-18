@@ -13,8 +13,6 @@
 // //  </APIProvider>
 // // )
 
-
-
 // // export default MapComponent;
 
 // import React, { useState, useEffect } from "react";
@@ -80,7 +78,7 @@
 //       options={options}
 //     >
 //       {location && <Marker position={location} label="أنت هنا" />}
-      
+
 //       {/* رسم دائرة لتوضيح نطاق البحث    32.05437728178327, 36.0936871678048*/}
 //       {location && (
 //         <Circle
@@ -100,18 +98,19 @@
 
 // export default MapComponent;
 
-
-
-
-
-
 import React, { useState, useEffect } from "react";
-import { GoogleMap, Marker, useLoadScript, Circle } from "@react-google-maps/api";
+import {
+  GoogleMap,
+  Marker,
+  useLoadScript,
+  Circle,
+  InfoWindow,
+} from "@react-google-maps/api";
 
 const libraries = ["places"];
 const mapContainerStyle = {
-  width: '100%',
-  height: '400px',
+  width: "100%",
+  height: "400px",
 };
 
 const options = {
@@ -134,6 +133,7 @@ const MapComponent = () => {
 
   const [location, setLocation] = useState(null);
   const [nearbyPlaces, setNearbyPlaces] = useState([]);
+  const [selectedPlace, setSelectedPlace] = useState(null);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -169,13 +169,15 @@ const MapComponent = () => {
     }
   }, [location, isLoaded]);
 
-  if (loadError) return <div className="bg-red-100 p-4 rounded-lg">Error loading map</div>;
-  if (!isLoaded) return <div className="bg-gray-100 p-4 rounded-lg">Loading map...</div>;
+  if (loadError)
+    return <div className="bg-red-100 p-4 rounded-lg">Error loading map</div>;
+  if (!isLoaded)
+    return <div className="bg-gray-100 p-4 rounded-lg">Loading map...</div>;
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md w-full">
-      <h2 className="text-lg font-semibold mb-4">Location</h2>
-      <div className="rounded-lg overflow-hidden">
+      <h2 className="text-lg font-semibold mb-4">Nearby Places</h2>
+      <div className="rounded-lg overflow-hidden shadow-lg">
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
           zoom={15}
@@ -198,7 +200,7 @@ const MapComponent = () => {
               />
             </>
           )}
-          
+
           {nearbyPlaces.map((place) => (
             <Marker
               key={place.place_id}
@@ -206,8 +208,21 @@ const MapComponent = () => {
               icon={{
                 url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
               }}
+              onClick={() => setSelectedPlace(place)}
             />
           ))}
+
+          {selectedPlace && (
+            <InfoWindow
+              position={selectedPlace.geometry.location}
+              onCloseClick={() => setSelectedPlace(null)}
+            >
+              <div>
+                <h3 className="font-semibold">{selectedPlace.name}</h3>
+                <p>{selectedPlace.vicinity}</p>
+              </div>
+            </InfoWindow>
+          )}
         </GoogleMap>
       </div>
     </div>

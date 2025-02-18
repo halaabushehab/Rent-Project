@@ -7,15 +7,22 @@ import calendarIcon from "../assets/calendar.png";
 import calendarIconAlt from "../assets/diskette (1).png";
 import { getDatabase, ref, onValue } from "firebase/database";
 import { app } from "../Firebase/Configration";
-import { FaBroom, FaUtensils, FaWifi, FaChalkboardTeacher } from "react-icons/fa";
+import {
+  FaBroom,
+  FaUtensils,
+  FaWifi,
+  FaChalkboardTeacher,
+} from "react-icons/fa";
 import help from "../assets/24-hours-support.png";
 import done from "../assets/24-hours-support.png";
 import { IoClose } from "react-icons/io5";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useSelector ,useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { setHousingData } from "../Redux/ShowSlice";
 import { Link } from "react-router-dom";
+import "./Home.css"
+
 const universities = [
   {
     name: "الجامعة الأردنية",
@@ -90,7 +97,6 @@ const properties = [
       "https://a0.muscache.com/im/pictures/229422e1-bbe3-46c0-9d72-7fcfcf2af51d.jpg?im_w=480&im_format=avif",
       "https://a0.muscache.com/im/pictures/fdb7aa0a-d6bf-4dc2-b161-5f13c5ab00e1.jpg?im_w=480&im_format=avif",
       "https://a0.muscache.com/im/pictures/b256a9b3-99db-4489-ab93-3660ec178b8b.jpg?im_w=960&im_format=avif",
-
     ],
   },
   {
@@ -106,7 +112,6 @@ const properties = [
       "https://a0.muscache.com/im/pictures/hosting/Hosting-U3RheVN1cHBseUxpc3Rpbmc6MTMxMjg2NDMyMTgxNzI4MTY0MA%3D%3D/original/ec6733d8-9cea-42ef-9e51-dbd77bb2afe6.jpeg?im_w=480&im_format=avif",
       "https://a0.muscache.com/im/pictures/hosting/Hosting-U3RheVN1cHBseUxpc3Rpbmc6MTMxMjg2NDMyMTgxNzI4MTY0MA%3D%3D/original/ac018721-46e4-4152-a4fd-410e9a20e8ba.jpeg?im_w=480&im_format=avif",
       "https://a0.muscache.com/im/pictures/hosting/Hosting-U3RheVN1cHBseUxpc3Rpbmc6MTMxMjg2NDMyMTgxNzI4MTY0MA%3D%3D/original/6ef30b1f-3590-4fa4-b7a8-b9817658246c.jpeg?im_w=480&im_format=avif",
-
     ],
   },
   {
@@ -122,7 +127,6 @@ const properties = [
       "https://a0.muscache.com/im/pictures/miso/Hosting-1350087520850588086/original/eb3b6c76-8ca0-41f3-8b53-40d7b77173f5.jpeg?im_w=480&im_format=avif",
       "https://a0.muscache.com/im/pictures/miso/Hosting-1350087520850588086/original/8651737c-8f99-4343-85a3-585d62456f98.jpeg?im_w=480&im_format=avif",
       "https://a0.muscache.com/im/pictures/miso/Hosting-1350087520850588086/original/0e6a3ff3-9f14-4d9c-8c5c-0c30052bebee.jpeg?im_w=480&im_format=avif",
-
     ],
   },
   {
@@ -138,11 +142,9 @@ const properties = [
       "https://a0.muscache.com/im/pictures/miso/Hosting-944354094310412051/original/78ed40a7-a180-4386-9b33-6aaa8c1e364d.jpeg?im_w=960&im_format=avif",
       "https://a0.muscache.com/im/pictures/miso/Hosting-944354094310412051/original/afa06c42-e20a-4fc2-be1e-89b95a4bcb80.jpeg?im_w=480&im_format=avif",
       "https://a0.muscache.com/im/pictures/miso/Hosting-944354094310412051/original/77e66063-cbb7-47af-bc9d-97de8de7e29e.jpeg?im_w=480&im_format=avif",
-
     ],
   },
 ];
-
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -150,21 +152,21 @@ const Home = () => {
 
   useEffect(() => {
     axios
-      .get("https://rent-app-a210b-default-rtdb.firebaseio.com/student_housing.json")
+      .get(
+        "https://rent-app-a210b-default-rtdb.firebaseio.com/student_housing.json"
+      )
       .then((response) => {
         if (response.data) {
           const propertiesArray = Object.keys(response.data).map((key) => ({
             id: key,
             ...response.data[key],
           }));
-          dispatch(setHousingData(propertiesArray)); // 🛠️ تحديث Redux store
+          dispatch(setHousingData(propertiesArray));
         }
       })
       .catch((error) => console.error("Error fetching data:", error));
   }, [dispatch]);
 
-
- 
   // const navigate = useNavigate();
 
   // const [housingData, setHousingData] = useState([]);
@@ -185,24 +187,44 @@ const Home = () => {
   //     .catch((error) => console.error("Error fetching data:", error));
   // }, []);
 
-
-
-
-
   const [showServices, setShowServices] = useState(false);
   // const [activeService, setActiveService] = useState(null);
 
   const services = [
-    { id: 1, icon: <FaBroom className="text-blue-500 text-4xl" />, title: "Room Cleaning", description: "Get your room cleaned regularly with our professional service.", link: "https://alemtyaz-jo.com/en/hard-services-2/" },
-    { id: 2, icon: <FaUtensils className="text-red-500 text-4xl" />, title: "Meal Delivery", description: "Enjoy fresh meals delivered straight to your accommodation.", link: "https://www.talabat.com/ar/jordan" },
-    { id: 3, icon: <FaWifi className="text-green-500 text-4xl" />, title: "High-Speed Internet", description: "Stay connected with our reliable high-speed internet service.", link: "https://www.orange.jo" },
-    { id: 4, icon: <FaChalkboardTeacher className="text-yellow-500 text-4xl" />, title: "Study Room Subscription", description: "Access shared study rooms for a focused learning environment.", link: "https://www.studytogether.com/" },
+    {
+      id: 1,
+      icon: <FaBroom className="text-blue-500 text-4xl" />,
+      title: "Room Cleaning",
+      description:
+        "Get your room cleaned regularly with our professional service.",
+      link: "https://alemtyaz-jo.com/en/hard-services-2/",
+    },
+    {
+      id: 2,
+      icon: <FaUtensils className="text-red-500 text-4xl" />,
+      title: "Meal Delivery",
+      description:
+        "Enjoy fresh meals delivered straight to your accommodation.",
+      link: "https://www.talabat.com/ar/jordan",
+    },
+    {
+      id: 3,
+      icon: <FaWifi className="text-green-500 text-4xl" />,
+      title: "High-Speed Internet",
+      description:
+        "Stay connected with our reliable high-speed internet service.",
+      link: "https://www.orange.jo",
+    },
+    {
+      id: 4,
+      icon: <FaChalkboardTeacher className="text-yellow-500 text-4xl" />,
+      title: "Study Room Subscription",
+      description:
+        "Access shared study rooms for a focused learning environment.",
+      link: "https://www.studytogether.com/",
+    },
   ];
 
-
-
-
-  
   // cards الاحصائيات
 
   const [stats, setStats] = useState([
@@ -233,20 +255,20 @@ const Home = () => {
 
   // cards الاحصائيات
 
-
   // حالة الصور لكل بطاقة
   const [currentIndices, setCurrentIndices] = useState(
     Array(properties.length).fill(0) // تخزين الصورة الحالية لكل بطاقة
   );
-  
+
   const nextSlide = (index) => {
     setCurrentIndices((prevIndices) => {
       const newIndices = [...prevIndices]; // نسخ المصفوفة لتحديثها
-      newIndices[index] = (newIndices[index] + 1) % properties[index].images.length; // زيادة المؤشر
+      newIndices[index] =
+        (newIndices[index] + 1) % properties[index].images.length; // زيادة المؤشر
       return newIndices;
     });
   };
-  
+
   const prevSlide = (index) => {
     setCurrentIndices((prevIndices) => {
       const newIndices = [...prevIndices]; // نسخ المصفوفة لتحديثها
@@ -257,30 +279,22 @@ const Home = () => {
     });
   };
 
-
-
-
-
-
-
-
-
-
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // قائمة البيانات (يمكنك جلبها من API أو قاعدة بيانات)
   const data = [
     { id: 1, name: "Amman University", city: "Amman" },
     { id: 2, name: "Jordan University", city: "Irbid" },
     { id: 3, name: "Yarmouk University", city: "Irbid" },
     { id: 4, name: "Petra University", city: "Amman" },
-    { id: 5, name: "Aqaba Technical College", city: "Aqaba" }
+    { id: 5, name: "Aqaba Technical College", city: "Aqaba" },
   ];
 
   // فلترة البيانات بناءً على إدخال المستخدم
-  const filteredResults = data.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.city.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredResults = data.filter(
+    (item) =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.city.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   function itemInfo(item) {
@@ -288,11 +302,9 @@ const Home = () => {
     // No need to log selectedStadium here, as it's updated asynchronously
   }
 
-
-
   return (
-
     <>
+    
       {/*  hero section strat */}
       <section className=" flex flex-col items-center justify-center bg-[#F7F7F7] py-45">
         <div className="flex flex-col-reverse md:flex-row justify-between items-center w-full max-w-6xl px-6">
@@ -309,38 +321,46 @@ const Home = () => {
 
             {/* Search Bar */}
             <div className="max-w-lg mx-auto p-6">
-      {/* مربع البحث */}
-      <div className="mt-6 flex flex-col sm:flex-row items-center bg-white shadow-lg rounded-lg p-3">
-        <input
-          type="text"
-          placeholder="Search by city, university, or property"
-          className="w-full p-3 border-none focus:outline-none focus:ring-2 focus:ring-[#EC8305] rounded-md transition duration-200"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <button className="mt-3 sm:mt-0 w-full sm:w-auto flex items-center bg-[#EC8305] text-white px-5 py-3 rounded-lg hover:bg-[#d97305] transition duration-200">
-          <FaSearch className="mr-2" /> Search
-        </button>
-      </div>
+              {/* مربع البحث */}
+              <div className="mt-6 flex flex-col sm:flex-row items-center bg-white shadow-lg rounded-lg p-3">
+                <input
+                  type="text"
+                  placeholder="Search by city, university, or property"
+                  className="w-full p-3 border-none focus:outline-none focus:ring-2 focus:ring-[#EC8305] rounded-md transition duration-200"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <button className="mt-3 sm:mt-0 w-full sm:w-auto flex items-center bg-[#EC8305] text-white px-5 py-3 rounded-lg hover:bg-[#d97305] transition duration-200">
+                  <FaSearch className="mr-2" /> Search
+                </button>
+              </div>
 
-      {/* عرض النتائج */}
-      {searchTerm && (
-        <div className="mt-4 bg-white shadow-lg rounded-lg p-3">
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">Results:</h3>
-          {filteredResults.length > 0 ? (
-            <ul>
-              {filteredResults.map(item => (
-                <li key={item.id} className="p-2 border-b last:border-none">
-                  <span className="font-semibold text-[#EC8305]">{item.name}</span> - {item.city}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500">No results found.</p>
-          )}
-        </div>
-      )}
-    </div>
+              {/* عرض النتائج */}
+              {searchTerm && (
+                <div className="mt-4 bg-white shadow-lg rounded-lg p-3">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                    Results:
+                  </h3>
+                  {filteredResults.length > 0 ? (
+                    <ul>
+                      {filteredResults.map((item) => (
+                        <li
+                          key={item.id}
+                          className="p-2 border-b last:border-none"
+                        >
+                          <span className="font-semibold text-[#EC8305]">
+                            {item.name}
+                          </span>{" "}
+                          - {item.city}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500">No results found.</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right Side (Animated Image) */}
@@ -377,34 +397,6 @@ const Home = () => {
         </div>
       </section>
       {/*  hero section end */}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
       {/*  Cards Section Start */}
 
@@ -474,37 +466,29 @@ const Home = () => {
                 ))}
               </div>
             </div>
-  
+
             <div className="p-4">
               <h3 className="text-lg font-semibold">{property.location}</h3>
               <p className="text-gray-600">{property.host}</p>
               <p className="mt-2 text-gray-800 text-sm">{property.date}</p>
-              <p className="mt-4 text-xl font-bold">{property.price} JD /night</p>
+              <p className="mt-4 text-xl font-bold">
+                {property.price} JD /night
+              </p>
               <div className="flex items-center mt-2">
                 <span className="text-yellow-500">⭐ {property.rating}</span>
                 <span className="ml-2 text-green-500">Guest favorite</span>
               </div>
               <button
-        onClick={() => handleMoreDetails(property.id)}
-        className="mt-4 bg-white text-orange-500 border border-orange-500 py-2 px-4 rounded-lg transition-all duration-300 hover:bg-orange-500 hover:text-white hover:scale-105 focus:outline-none shadow-lg"
-      >
-Premium     </button>
+                onClick={() => handleMoreDetails(property.id)}
+                className="mt-4 bg-white text-orange-500 border border-orange-500 py-2 px-4 rounded-lg transition-all duration-300 hover:bg-orange-500 hover:text-white hover:scale-105 focus:outline-none shadow-lg"
+              >
+                Premium{" "}
+              </button>
             </div>
-            
           </div>
         ))}
-
       </div>
       {/*  Cards Section End */}
-
-
-
-
-
-
-
-
-
 
       {/*  ACCOMMODATION way section end */}
 
@@ -591,64 +575,44 @@ Premium     </button>
 
       {/*  ACCOMMODATION way section end */}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       {/*  Cards Section Start */}
       <h2 className="text-4xl font-bold text-[#091057] mb-6 text-center tracking-wide">
-  ✨🏡 Your Next Home Awaits – Explore Now! ✨
-</h2>
+        ✨🏡 Your Next Home Awaits – Explore Now! ✨
+      </h2>
 
-
-
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 my-20 mx-auto  max-w-[90%]">
-  {housingData.slice(0, 4).map((property) => (
-
-  
-  <div
-    
-      key={property.id}
-      className="bg-white rounded-lg shadow-xl overflow-hidden transition-transform transform hover:scale-105 h-[550px]" // Increased width
-    >
-      {/* صورة العقار */}
-      <div className="relative w-full h-52"> {/* Increased height */}
-        <img
-          src={property.images}
-          alt={property.name}
-          className="w-full h-[300px] object-cover transition-opacity duration-500"        />
-
-        {/* شارة الحالة */}
-        <div
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 my-20 mx-auto  max-w-[90%]">
+        {housingData.slice(0, 4).map((property) => (
+          <div
+            key={property.id}
+            className="bg-white rounded-lg shadow-xl overflow-hidden transition-transform transform hover:scale-105 h-[550px]" // Increased width
+          >
+            {/* صورة العقار */}
+            <div className="relative w-full h-52">
+              {" "}
+              {/* Increased height */}
+              <img
+                src={property.images}
+                alt={property.name}
+                className="w-full h-[300px] object-cover transition-opacity duration-500"
+              />
+              {/* شارة الحالة */}
+              <div
                 className={`absolute top-3 left-3 px-3 py-1 text-xs font-bold text-white uppercase rounded-lg ${
                   property.isBooked ? "bg-red-500" : "bg-green-500"
                 } bg-opacity-90 shadow-md`}
               >
                 {property.isBooked ? "Booked" : "Available"}
               </div>
-
-        {/* نص الحالة فوق الشعار */}
-        {/* <div className="absolute top-3 left-1/2 transform -translate-x-1/2 text-white font-bold">
+              {/* نص الحالة فوق الشعار */}
+              {/* <div className="absolute top-3 left-1/2 transform -translate-x-1/2 text-white font-bold">
           {property.status === "Available" ? "Not Booked" : "Booked"}
         </div> */}
-
-        {/* أيقونة الحفظ */}
-        <span className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md cursor-pointer">
-          📅 {/* يمكن استبدالها بـ FontAwesome */}
-        </span>
-
-        {/* أسهم التنقل */}
-        <button
+              {/* أيقونة الحفظ */}
+              <span className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md cursor-pointer">
+                📅 {/* يمكن استبدالها بـ FontAwesome */}
+              </span>
+              {/* أسهم التنقل */}
+              <button
                 className="absolute top-35 left-3 transform -translate-y-1/2 bg-white bg-opacity-70 text-gray-800 p-2 rounded-full hover:bg-opacity-100"
                 onClick={() => prevSlide(index)}
               >
@@ -660,49 +624,40 @@ Premium     </button>
               >
                 <ChevronRight size={24} />
               </button>
+            </div>
+
+            {/* محتوى البطاقة */}
+            <div className="p-4 my-25">
+              <h3 className="text-lg font-semibold">{property.location}</h3>
+              <p className="text-gray-600">{property.name}</p>
+              <p className="text-gray-600">{property.description}</p>
+              <p className="mt-2 text-gray-800 text-sm">{property.date}</p>
+
+              {/* السعر والتقييم */}
+              <div className="flex justify-between items-center mt-2">
+                <span className="mt-4 text-xl font-bold">
+                  {property.price} JD /night
+                </span>
+              </div>
+
+              {/* التقييم */}
+              <div className="flex items-center mt-2">
+                ⭐ 4.3 {property.rating}{" "}
+                <span className="ml-2 text-green-500"> Guest favorite</span>
+              </div>
+
+              {/* زر التفاصيل */}
+              <Link to={"/PropertyDetails"}>
+                <button className="mt-4 bg-white text-orange-500 border border-orange-500 py-2 px-4 rounded-lg transition-all duration-300 hover:bg-orange-500 hover:text-white hover:scale-105 focus:outline-none shadow-lg">
+                  More Details
+                </button>
+              </Link>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* محتوى البطاقة */}
-      <div className="p-4 my-25">
-        <h3 className="text-lg font-semibold">{property.location}</h3>
-        <p className="text-gray-600">{property.name}</p>
-        <p className="text-gray-600">{property.description}</p>
-        <p className="mt-2 text-gray-800 text-sm">{property.date}</p>
-
-        {/* السعر والتقييم */}
-        <div className="flex justify-between items-center mt-2">
-          <span className="mt-4 text-xl font-bold">{property.price} JD /night</span>
-        </div>
-
-        {/* التقييم */}
-        <div className="flex items-center mt-2">
-          ⭐ 4.3 {property.rating} <span className="ml-2 text-green-500"> Guest favorite</span>
-        </div>
-
-        {/* زر التفاصيل */}
-        <Link to={"/PropertyDetails"}>
-        <button
-       
-        className="mt-4 bg-white text-orange-500 border border-orange-500 py-2 px-4 rounded-lg transition-all duration-300 hover:bg-orange-500 hover:text-white hover:scale-105 focus:outline-none shadow-lg" >
-        More Details
-        </button>
-        </Link> 
-
-
-
-       
-
-        
-        </div>
-        
-       </div>
-       
-  )
-  )}
-</div>
-
-
-{/* 
+      {/* 
       <div className="p-6"> */}
       {/* 🔹 عرض العقارات بتمرير أفقي */}
       {/* <div className="overflow-x-auto whitespace-nowrap py-8 px-15">
@@ -728,7 +683,7 @@ Premium     </button>
                   <p className="text-xl font-bold mt-2">{item.price || "N/A"}JD/Night</p>
 
                   {/* 🔹 زر "More Details" */}
-                  {/* <button
+      {/* <button
                     onClick={() => handleMoreDetails(item.id)}
                     className="mt-4 bg-white text-orange-500 border border-orange-500 py-2 px-4 rounded-lg transition-all duration-300 hover:bg-orange-500 hover:text-white hover:scale-105 focus:outline-none shadow-lg w-35"
                   >
@@ -742,22 +697,8 @@ Premium     </button>
           )}
         </div>
       </div>
-    </div> */} 
+    </div> */}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
       {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mx-auto max-w-[90%] my-20">
         {properties.map((property, index) => (
           <div
@@ -836,15 +777,6 @@ Premium     </button>
       </div> */}
       {/*  Cards Section End */}
 
-
-
-
-
-
-
-
-
-
       {/*   way to rent house  */}
       {/* <section className="bg-gradient-to-b from-[#F7F7F7] to-[#8AA2D0] py-20"> */}
 
@@ -899,76 +831,68 @@ Premium     </button>
           </div>
 
           <div className="mt-12">
-      <button
-        onClick={() => navigate("/FindaStay")}
-        className="bg-[#EC8305] text-white py-3 px-6 text-lg font-semibold rounded-lg hover:bg-[#d97305] transition duration-300 shadow-lg transform hover:scale-105"
-      >
-        Start Now
-      </button>
-    </div>
+            <button
+              onClick={() => navigate("/FindaStay")}
+              className="bg-[#EC8305] text-white py-3 px-6 text-lg font-semibold rounded-lg hover:bg-[#d97305] transition duration-300 shadow-lg transform hover:scale-105"
+            >
+              Start Now
+            </button>
+          </div>
         </div>
       </section>
 
       {/*   way to rent house  */}
 
-
-
-
-
-
-
-
-{/*  new seaction  */}
-<>
-      {/* زر الخدمات العائم */}
-      <button
-        className="fixed bottom-40 right-6  p-4  text-white rounded-full shadow-lg  transition transform hover:scale-110 "
-        onClick={() => setShowServices(!showServices)}
-      >
-        <img
-          src={help} 
-          className="w-8 h-8"
-        />
-      </button>
+      {/*  new seaction  */}
+      <>
+        {/* زر الخدمات العائم */}
+        <button
+          className="fixed bottom-40 right-6  p-4  text-white rounded-full shadow-lg  transition transform hover:scale-110 "
+          onClick={() => setShowServices(!showServices)}
+        >
+          <img src={help} className="w-8 h-8" />
+        </button>
 
         {/* القائمة الجانبية مع تأثيرات أجمل */}
         <div
-        className={`fixed top-10 right-0  w-80  h-100  bg-white bg-opacity-80 backdrop-blur-lg shadow-2xl w-72 p-6 rounded-l-3xl transition-transform duration-500 ${
-          showServices ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        {/* زر إغلاق داخل القائمة */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-800">Student Services</h2>
-          <button onClick={() => setShowServices(false)} className="text-gray-500 hover:text-gray-800">
-            <IoClose className="text-3xl" />
-          </button>
+          className={`fixed top-10 right-0  w-80  h-100  bg-white bg-opacity-80 backdrop-blur-lg shadow-2xl w-72 p-6 rounded-l-3xl transition-transform duration-500 ${
+            showServices ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          {/* زر إغلاق داخل القائمة */}
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-800">
+              Student Services
+            </h2>
+            <button
+              onClick={() => setShowServices(false)}
+              className="text-gray-500 hover:text-gray-800"
+            >
+              <IoClose className="text-3xl" />
+            </button>
+          </div>
+
+          <ul className="space-y-4">
+            {services.map((service) => (
+              <li
+                key={service.id}
+                className="flex items-center space-x-3 p-3 bg-white rounded-xl shadow-md hover:bg-gray-200 transition cursor-pointer"
+              >
+                {service.icon}
+                <a
+                  href={service.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-800 font-medium hover:text-blue-500 transition"
+                >
+                  {service.title}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
-
-        <ul className="space-y-4">
-  {services.map((service) => (
-    <li
-      key={service.id}
-      className="flex items-center space-x-3 p-3 bg-white rounded-xl shadow-md hover:bg-gray-200 transition cursor-pointer"
-    >
-      {service.icon}
-      <a
-        href={service.link}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-gray-800 font-medium hover:text-blue-500 transition"
-      >
-        {service.title}
-      </a>
-    </li>
-  ))}
-</ul>
-      </div>
-    </>
-{/*  new seaction  */}
- 
-
-
+      </>
+      {/*  new seaction  */}
 
       {/* final scroll section  */}
 

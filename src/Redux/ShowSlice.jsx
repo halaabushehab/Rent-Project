@@ -12,7 +12,7 @@ const initialState = {
     approve: "pending",
     payment: "pending",
   },
-  housingData: [], // 🛠️ أضف housingData هنا حتى لا يكون undefined
+  housingData: [],
 };
 
 const showSlice = createSlice({
@@ -33,10 +33,8 @@ const showSlice = createSlice({
     setHousingData: (state, action) => {
       state.housingData = action.payload;
     },
-
-
   },
 });
 
-export const { updateDataForm ,setHousingData } = showSlice.actions;
+export const { updateDataForm, setHousingData } = showSlice.actions;
 export default showSlice.reducer;

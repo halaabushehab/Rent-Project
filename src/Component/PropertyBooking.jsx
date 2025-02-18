@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import { getDatabase, ref, get, set } from "firebase/database"; // وظائف Realtime Database
 import { getAuth } from "firebase/auth"; // وظائف Auth
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-export default function PropertyBooking() {
+export default function PropertyBooking({ property, price, id }) {
+  const navigate = useNavigate();
+
   const [isVisible, setIsVisible] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -19,6 +21,7 @@ export default function PropertyBooking() {
     endDate: "",
     clearanceDocument: null,
     termsAccepted: false,
+    price: price || 0,
   });
 
   const [bookingInfo, setBookingInfo] = useState({
@@ -81,13 +84,23 @@ export default function PropertyBooking() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // حساب عدد الأيام بين تاريخ البداية والنهاية
+    // Validate required fields
+    if (!formData.price) {
+      Swal.fire({
+        title: "Error",
+        text: "Price is missing. Please ensure the property has a valid price.",
+        icon: "error",
+      });
+      return;
+    }
+
+    // Calculate the number of days between the start and end date
     const startDate = new Date(formData.startDate);
     const endDate = new Date(formData.endDate);
     const timeDiff = endDate.getTime() - startDate.getTime();
     const daysUntilResponse = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-    // تحديث معلومات الحجز
+    // Update booking info
     setBookingInfo({
       bookingName: formData.name,
       recentBookings:
@@ -98,7 +111,7 @@ export default function PropertyBooking() {
       features: bookingInfo.features,
     });
 
-    // حفظ البيانات في Realtime Database
+    // Save data to Realtime Database
     const db = getDatabase();
     const bookingsRef = ref(db, "bookings/" + formData.name);
     await set(bookingsRef, {
@@ -115,9 +128,13 @@ export default function PropertyBooking() {
       clearanceDocument: formData.clearanceDocument
         ? formData.clearanceDocument.name
         : "",
+      price: formData.price, // Ensure price is included
     });
 
-    // عرض تنبيه النجاح
+    // Navigate to the Checkout page with the collected data and the property ID
+    navigate("/Cheackout", { state: { ...formData, propertyId: id } });
+
+    // Show success alert
     await Swal.fire({
       title: "Application Submitted!",
       text: "Your rental application has been submitted successfully. Please wait for our response.",
@@ -128,7 +145,7 @@ export default function PropertyBooking() {
       confirmButtonText: "OK",
     });
 
-    // إعادة تعيين النموذج وإغلاق النافذة
+    // Reset the form and close the modal
     setFormData({
       name: "",
       email: "",
@@ -142,6 +159,7 @@ export default function PropertyBooking() {
       endDate: "",
       clearanceDocument: null,
       termsAccepted: false,
+      price: price || 0, // Reset the price as well
     });
     setIsVisible(false);
   };
@@ -223,19 +241,6 @@ export default function PropertyBooking() {
                 className="w-full p-4 border border-orange-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-200"
               />
               <div className="grid grid-cols-2 gap-4">
-                <select
-                  name="roomType"
-                  value={formData.roomType}
-                  onChange={handleChange}
-                  required
-                  className="w-full p-4 border border-orange-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-200"
-                >
-                  <option value="" disabled>
-                    Select Room Type
-                  </option>
-                  <option value="Single Room">Single Room</option>
-                  <option value="Double Room">Double Room</option>
-                </select>
                 <select
                   name="purpose"
                   value={formData.purpose}

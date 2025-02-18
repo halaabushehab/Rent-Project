@@ -17,7 +17,8 @@ export default function PropertyList() {
     thumbnail: "",
   });
 
-  const dbUrl = "https://rent-app-a210b-default-rtdb.firebaseio.com/student_housing.json";
+  const dbUrl =
+    "https://rent-app-a210b-default-rtdb.firebaseio.com/student_housing.json";
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
@@ -27,7 +28,10 @@ export default function PropertyList() {
       reader.onloadend = () => {
         newImages.push(reader.result);
         if (newImages.length === files.length) {
-          setFormData((prev) => ({ ...prev, images: [...prev.images, ...newImages] }));
+          setFormData((prev) => ({
+            ...prev,
+            images: [...prev.images, ...newImages],
+          }));
         }
       };
       reader.readAsDataURL(file);
@@ -67,30 +71,39 @@ export default function PropertyList() {
 
   return (
     <>
-    
       {isOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg relative">
-            <h2 className="text-2xl font-bold mb-6 text-center text-blue-900">Add New Property</h2>
+        <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg relative overflow-y-auto max-h-[85vh] border-2 border-[#FF6900]">
+            <h2 className="text-2xl font-bold mb-6 text-center text-blue-900">
+              Add New Property
+            </h2>
 
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
-                  <label className="block font-medium mb-1 text-blue-900">Name *</label>
+                  <label className="block font-medium mb-1 text-blue-900">
+                    Name *
+                  </label>
                   <input
                     type="text"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     required
                     className="w-full p-2 border border-gray-300 rounded focus:ring-orange-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-medium mb-1 text-blue-900">Description *</label>
+                  <label className="block font-medium mb-1 text-blue-900">
+                    Description *
+                  </label>
                   <textarea
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     required
                     rows={4}
                     className="w-full p-2 border border-gray-300 rounded focus:ring-orange-500"
@@ -100,21 +113,29 @@ export default function PropertyList() {
 
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
-                  <label className="block font-medium mb-1 text-blue-900">Location *</label>
+                  <label className="block font-medium mb-1 text-blue-900">
+                    Location *
+                  </label>
                   <input
                     type="text"
                     value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, location: e.target.value })
+                    }
                     required
                     className="w-full p-2 border border-gray-300 rounded focus:ring-orange-500"
                   />
                 </div>
                 <div>
-                  <label className="block font-medium mb-1 text-blue-900">Price *</label>
+                  <label className="block font-medium mb-1 text-blue-900">
+                    Price *
+                  </label>
                   <input
                     type="number"
                     value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price: e.target.value })
+                    }
                     required
                     className="w-full p-2 border border-gray-300 rounded focus:ring-orange-500"
                   />
@@ -122,7 +143,9 @@ export default function PropertyList() {
               </div>
 
               <div className="mt-4">
-                <label className="block font-medium mb-1 text-blue-900">Upload Images *</label>
+                <label className="block font-medium mb-1 text-blue-900">
+                  Upload Images *
+                </label>
                 <input
                   type="file"
                   accept="image/*"
@@ -134,7 +157,9 @@ export default function PropertyList() {
               </div>
 
               <div className="mt-4">
-                <label className="block font-medium mb-1 text-blue-900">Upload Ownership Document *</label>
+                <label className="block font-medium mb-1 text-blue-900">
+                  Upload Ownership Document *
+                </label>
                 <input
                   type="file"
                   accept="image/*"
@@ -143,8 +168,7 @@ export default function PropertyList() {
                   required
                 />
               </div>
-
-              <div className="mt-4 flex flex-wrap gap-4">
+              <div className="mt-4 flex flex-wrap gap-4 p-2">
                 {formData.images.map((img, index) => (
                   <img
                     key={index}
@@ -156,7 +180,10 @@ export default function PropertyList() {
               </div>
 
               <div className="mt-6 flex justify-center">
-                <button type="submit" className="py-3 px-6 rounded-lg text-white bg-orange-500 hover:opacity-90">
+                <button
+                  type="submit"
+                  className="py-3 px-6 rounded-lg text-white bg-orange-500 hover:opacity-90"
+                >
                   SUBMIT YOUR REQUEST
                 </button>
               </div>
